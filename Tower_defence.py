@@ -33,7 +33,7 @@ def draw_grid():
 
 def draw_panel():
 	pygame.draw.rect(screen, PANEL_BG, (BOARD_WIDTH, 0, PANEL_WIDTH, HEIGHT))
-	
+
 def main():
 	running = True
 	while running:
