@@ -1,6 +1,7 @@
 import sys
 import pygame
-
+import math
+from dataclasses import dataclass
 pygame.init()
 
 GRID_COLS = 16
@@ -18,25 +19,6 @@ GRID_COLOR = (43, 52, 63)
 GRASS_COLOR = (49, 90, 58)
 PANEL_BG = (20, 24, 30)
 
-screen = pygame.display.set_mode((WIDTH, HEIGHT))
-pygame.display.set_caption("Tower Defense - Day 1")
-clock = pygame.time.Clock()
-
-def draw_grid():
-	for row in range(GRID_ROWS):
-		for col in range(GRID_COLS):
-			x = col * TILE_SIZE
-			y = row * TILE_SIZE
-			pygame.draw.rect(screen, GRASS_COLOR, (x, y, TILE_SIZE, TILE_SIZE))
-			pygame.draw.rect(screen, GRID_COLOR, (x, y, TILE_SIZE, TILE_SIZE), 1)
-
-
-def draw_panel():
-	pygame.draw.rect(screen, PANEL_BG, (BOARD_WIDTH, 0, PANEL_WIDTH, HEIGHT))
-
-import math
-from dataclasses import dataclass
-
 PATH_COLOR = (116, 89, 68)
 ENEMY_COLOR = (223, 104, 90)
 
@@ -49,21 +31,10 @@ PATH_TILES = [
 ]
 PATH_SET = set(PATH_TILES)
 
+screen = pygame.display.set_mode((WIDTH, HEIGHT))
+pygame.display.set_caption("Tower Defense - Day 1")
+clock = pygame.time.Clock()
 
-def tile_center(col, row):
-	return (col * TILE_SIZE + TILE_SIZE / 2, row * TILE_SIZE + TILE_SIZE / 2)
-
-
-PATH_POINTS = [tile_center(c, r) for c, r in PATH_TILES]
-
-def draw_grid():
-	for row in range(GRID_ROWS):
-		for col in range(GRID_COLS):
-			x = col * TILE_SIZE
-			y = row * TILE_SIZE
-			tile_color = PATH_COLOR if (col, row) in PATH_SET else GRASS_COLOR
-			pygame.draw.rect(screen, tile_color, (x, y, TILE_SIZE, TILE_SIZE))
-			pygame.draw.rect(screen, GRID_COLOR, (x, y, TILE_SIZE, TILE_SIZE), 1)
 @dataclass
 class Enemy:
 	x: float
@@ -90,12 +61,34 @@ class Enemy:
 			self.x += dx / dist * step
 			self.y += dy / dist * step
 
-def draw(self):
-	pygame.draw.circle(screen, ENEMY_COLOR, (int(self.x), int(self.y)), 14)
-	
+	def draw(self):
+		pygame.draw.circle(screen, ENEMY_COLOR, (int(self.x), int(self.y)), 14)
+
+def tile_center(col, row):
+	return (col * TILE_SIZE + TILE_SIZE / 2, row * TILE_SIZE + TILE_SIZE / 2)
+
+
+PATH_POINTS = [tile_center(c, r) for c, r in PATH_TILES]
+
+def draw_grid():
+	for row in range(GRID_ROWS):
+		for col in range(GRID_COLS):
+			x = col * TILE_SIZE
+			y = row * TILE_SIZE
+			tile_color = PATH_COLOR if (col, row) in PATH_SET else GRASS_COLOR
+			pygame.draw.rect(screen, tile_color, (x, y, TILE_SIZE, TILE_SIZE))
+			pygame.draw.rect(screen, GRID_COLOR, (x, y, TILE_SIZE, TILE_SIZE), 1)
+
+
+def draw_panel():
+	pygame.draw.rect(screen, PANEL_BG, (BOARD_WIDTH, 0, PANEL_WIDTH, HEIGHT))
+
 def main():
 	running = True
+	enemy = Enemy(*PATH_POINTS[0])
 	while running:
+		dt = clock.tick(FPS) / 1000.0
+		enemy.update(dt)
 		clock.tick(FPS)
 
 		for event in pygame.event.get():
@@ -104,6 +97,7 @@ def main():
 
 		screen.fill(BG_COLOR)
 		draw_grid()
+		enemy.draw()
 		draw_panel()
 		pygame.display.flip()
 
