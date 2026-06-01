@@ -18,6 +18,7 @@ BG_COLOR = (26, 33, 42)
 GRID_COLOR = (43, 52, 63)
 GRASS_COLOR = (49, 90, 58)
 PANEL_BG = (20, 24, 30)
+TOWER_COLOR = (0, 225, 0)
 
 PATH_COLOR = (116, 89, 68)
 ENEMY_COLOR = (223, 104, 90)
@@ -95,7 +96,42 @@ class WaveController:
 			self.spawned += 1
 			self.spawn_timer = 0.8
 
-	
+@dataclass
+class Tower:
+	col: int
+	row: int
+
+	@property
+	def x(self):
+		return self.col * TILE_SIZE + TILE_SIZE / 2
+
+	@property
+	def y(self):
+		return self.row * TILE_SIZE + TILE_SIZE / 2
+
+	def draw(self):
+		cx = int(self.x)
+		cy = int(self.y)
+		pygame.draw.rect(screen, TOWER_COLOR, (cx - 14, cy - 14, 28, 28), border_radius=4)
+
+def tower_at(towers, col, row):
+	for t in towers:
+		if t.col == col and t.row == row:
+			return t
+			return None
+
+def can_place_tower(towers, col, row):
+	if col < 0 or col >= GRID_COLS or row < 0 or row >= GRID_ROWS:
+		return False
+	if (col, row) in PATH_SET:
+			return False
+	if tower_at(towers, col, row) is not None:
+		return False
+	return True
+
+
+
+
 
 
 def draw_grid():
@@ -115,6 +151,7 @@ def main():
 	running = True
 	enemies = []
 	waves = WaveController()
+	towers = []
 	while running:
 		# --- Update ---
 		dt = clock.tick(FPS) / 1000.0
@@ -124,21 +161,34 @@ def main():
 		waves.update(dt, enemies)
 
 		clock.tick(FPS)
-
+		
 		for event in pygame.event.get():
 			if event.type == pygame.QUIT:
 				running = False
 			if event.type == pygame.KEYDOWN:
 				if event.key == pygame.K_s:
 					waves.begin_wave()
+		
+			if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+				mx, my = event.pos
+				if mx < BOARD_WIDTH:
+					col = mx // TILE_SIZE
+					row = my // TILE_SIZE
+					if can_place_tower(towers, col, row):
+						towers.append(Tower(col, row))
 
 
-#       --- Draw ---
+
+       #    --- Draw ---
 		screen.fill(BG_COLOR)
 		draw_grid()
+
+		for tower in towers:
+				tower.draw()
+
 		for enemy in enemies:
 			enemy.draw()
-			
+
 		draw_panel()
 		pygame.display.flip()
 
