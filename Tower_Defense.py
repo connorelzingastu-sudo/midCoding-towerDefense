@@ -4,6 +4,7 @@ import math
 from dataclasses import dataclass
 pygame.init()
 
+# --- Constants ---
 GRID_COLS = 16
 GRID_ROWS = 12
 TILE_SIZE = 56
@@ -23,23 +24,7 @@ TOWER_COLOR = (0, 225, 0)
 PATH_COLOR = (116, 89, 68)
 ENEMY_COLOR = (223, 104, 90)
 
-def tile_center(col, row):
-	return (col * TILE_SIZE + TILE_SIZE / 2, row * TILE_SIZE + TILE_SIZE / 2)
-
-PATH_TILES = [
-	(0, 5), (1, 5), (2, 5), (3, 5), (4, 5),
-	(5, 5), (5, 6), (5, 7), (6, 7), (7, 7),
-	(8, 7), (8, 6), (8, 5), (9, 5), (10, 5),
-	(11, 5), (12, 5), (12, 4), (12, 3),
-	(13, 3), (14, 3), (15, 3),
-]
-PATH_SET = set(PATH_TILES)
-PATH_POINTS = [tile_center(c, r) for c, r in PATH_TILES]
-
-screen = pygame.display.set_mode((WIDTH, HEIGHT))
-pygame.display.set_caption("Tower Defense - Day 3")
-clock = pygame.time.Clock()
-
+# --- Classes ---
 @dataclass
 class Enemy:
 	x: float
@@ -114,6 +99,10 @@ class Tower:
 		cy = int(self.y)
 		pygame.draw.rect(screen, TOWER_COLOR, (cx - 14, cy - 14, 28, 28), border_radius=4)
 
+# --- Utility Functions
+def tile_center(col, row):
+	return (col * TILE_SIZE + TILE_SIZE / 2, row * TILE_SIZE + TILE_SIZE / 2)
+
 def tower_at(towers, col, row):
 	for t in towers:
 		if t.col == col and t.row == row:
@@ -129,11 +118,6 @@ def can_place_tower(towers, col, row):
 		return False
 	return True
 
-
-
-
-
-
 def draw_grid():
 	for row in range(GRID_ROWS):
 		for col in range(GRID_COLS):
@@ -146,6 +130,22 @@ def draw_grid():
 
 def draw_panel():
 	pygame.draw.rect(screen, PANEL_BG, (BOARD_WIDTH, 0, PANEL_WIDTH, HEIGHT))
+
+
+# --- Game Setup
+PATH_TILES = [
+	(0, 5), (1, 5), (2, 5), (3, 5), (4, 5),
+	(5, 5), (5, 6), (5, 7), (6, 7), (7, 7),
+	(8, 7), (8, 6), (8, 5), (9, 5), (10, 5),
+	(11, 5), (12, 5), (12, 4), (12, 3),
+	(13, 3), (14, 3), (15, 3),
+]
+PATH_SET = set(PATH_TILES)
+PATH_POINTS = [tile_center(c, r) for c, r in PATH_TILES]
+
+screen = pygame.display.set_mode((WIDTH, HEIGHT))
+pygame.display.set_caption("Tower Defense - Day 3")
+clock = pygame.time.Clock()
 
 def main():
 	running = True
@@ -162,6 +162,7 @@ def main():
 
 		clock.tick(FPS)
 		
+		# --- Get and handle events ---
 		for event in pygame.event.get():
 			if event.type == pygame.QUIT:
 				running = False
@@ -176,8 +177,6 @@ def main():
 					row = my // TILE_SIZE
 					if can_place_tower(towers, col, row):
 						towers.append(Tower(col, row))
-
-
 
        #    --- Draw ---
 		screen.fill(BG_COLOR)
