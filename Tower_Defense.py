@@ -22,6 +22,9 @@ PANEL_BG = (20, 24, 30)
 PATH_COLOR = (116, 89, 68)
 ENEMY_COLOR = (223, 104, 90)
 
+def tile_center(col, row):
+	return (col * TILE_SIZE + TILE_SIZE / 2, row * TILE_SIZE + TILE_SIZE / 2)
+
 PATH_TILES = [
 	(0, 5), (1, 5), (2, 5), (3, 5), (4, 5),
 	(5, 5), (5, 6), (5, 7), (6, 7), (7, 7),
@@ -30,9 +33,10 @@ PATH_TILES = [
 	(13, 3), (14, 3), (15, 3),
 ]
 PATH_SET = set(PATH_TILES)
+PATH_POINTS = [tile_center(c, r) for c, r in PATH_TILES]
 
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
-pygame.display.set_caption("Tower Defense - Day 1")
+pygame.display.set_caption("Tower Defense - Day 3")
 clock = pygame.time.Clock()
 
 @dataclass
@@ -64,11 +68,7 @@ class Enemy:
 	def draw(self):
 		pygame.draw.circle(screen, ENEMY_COLOR, (int(self.x), int(self.y)), 14)
 
-def tile_center(col, row):
-	return (col * TILE_SIZE + TILE_SIZE / 2, row * TILE_SIZE + TILE_SIZE / 2)
 
-
-PATH_POINTS = [tile_center(c, r) for c, r in PATH_TILES]
 
 def draw_grid():
 	for row in range(GRID_ROWS):
