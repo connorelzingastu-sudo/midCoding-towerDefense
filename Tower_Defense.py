@@ -22,6 +22,11 @@ GRASS_COLOR = (49, 90, 58)
 PANEL_BG = (20, 24, 30)
 PATH_COLOR = (116, 89, 68)
 ENEMY_COLOR = (223, 104, 90)
+font = pygame.font.SysFont("menlo", 20)
+
+
+
+
 
 PATH_TILES = [
 	(0, 5), (1, 5), (2, 5), (3, 5), (4, 5),
@@ -186,7 +191,18 @@ def tower_at(towers, col, row):
 		if t.col == col and t.row == row:
 			return t
 	return None
-
+def draw_hud(gold, lives, wave_num, message):
+	lines = [
+		f"Gold: {gold}",
+		f"Lives: {lives}",
+		f"Wave: {wave_num}",
+		message,
+	]
+	y = 20
+	for line in lines:
+		surf = font.render(line, True, (230, 234, 240))
+		screen.blit(surf, (BOARD_WIDTH + 16, y))
+		y += 28
 def can_place_tower(towers, col, row):
 	if col < 0 or col >= GRID_COLS or row < 0 or row >= GRID_ROWS:
 		return False
@@ -203,6 +219,10 @@ def main():
 	bullets = []
 	waves = WaveController()
 	enemy = Enemy(*PATH_POINTS[0])
+	gold = 220
+	lives = 20
+	tower_cost = 70
+	message = "Press S to start wave."
 
 	while running:
 		screen.fill(BG_COLOR)
@@ -218,8 +238,12 @@ def main():
 				if mx < BOARD_WIDTH:
 					col = mx // TILE_SIZE
 					row = my // TILE_SIZE
-					if can_place_tower(towers, col, row):
+					if can_place_tower(towers, col, row) and gold >= tower_cost:
 						towers.append(Tower(col, row))
+						gold -= tower_cost
+					elif gold < tower_cost:
+						message = "Not enough gold."
+
 		waves.update(dt, enemies)
 		
 		for enemy in enemies:
@@ -230,6 +254,7 @@ def main():
 		for tower in towers:
 			tower.draw()
 		draw_panel()
+		draw_hud(gold, lives, waves.wave_index, message)
 		update_towers(towers, enemies, bullets, dt)
 
 		for b in list(bullets):
@@ -239,8 +264,14 @@ def main():
 			b.draw()
 
 		for enemy in list(enemies):
-			if enemy.health <= 0:
+			enemy.update(dt)
+			if enemy.path_index >= len(PATH_POINTS) - 1:
 				enemies.remove(enemy)
+				lives -= 1
+				message = "Enemy leaked through!"
+			elif enemy.health <= 0:
+				enemies.remove(enemy)
+				gold += 12
 		
 		pygame.display.flip()
 
