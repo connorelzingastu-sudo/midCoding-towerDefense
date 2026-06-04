@@ -14,7 +14,7 @@ PANEL_WIDTH = 280
 WIDTH = BOARD_WIDTH + PANEL_WIDTH
 HEIGHT = BOARD_HEIGHT
 FPS = 60
-TOWER_COLOR = (90, 176, 240)
+TOWER_COLOR = (0, 225, 0)
 BULLET_COLOR = (252, 210, 78)
 BG_COLOR = (26, 33, 42)
 GRID_COLOR = (43, 52, 63)
@@ -79,36 +79,7 @@ class Tower:
 		cx = int(self.x)
 		cy = int(self.y)
 		pygame.draw.rect(screen, TOWER_COLOR, (cx - 14, cy - 14, 28, 28), border_radius=4)
-	def tower_range(tower):
-		return 120
-	def tower_damage(tower):
-		return 18
-	def tower_fire_rate(tower):
-		return 1.0
-@dataclass
-class Bullet:
-	x: float
-	y: float
-	target: Enemy
-	damage: float
-	speed: float = 420.0
 
-	def update(self, dt):
-		if self.target.health <= 0:
-			return True
-		dx = self.target.x - self.x
-		dy = self.target.y - self.y
-		dist = math.hypot(dx, dy)
-		if dist < 8:
-			self.target.health -= self.damage
-			return True
-		step = self.speed * dt
-		self.x += dx / dist * min(step, dist)
-		self.y += dy / dist * min(step, dist)
-		return False
-
-	def draw(self):
-		pygame.draw.circle(screen, BULLET_COLOR, (int(self.x), int(self.y)), 4)
 @dataclass
 class Enemy:
 	x: float
@@ -144,6 +115,30 @@ class Enemy:
 		pygame.draw.rect(screen, (77, 201, 112), (int(self.x - 14), int(self.y - 22), int(bar_w * pct), 5))
 		pygame.draw.circle(screen, ENEMY_COLOR, (int(self.x), int(self.y)), 14)
 
+@dataclass
+class Bullet:
+	x: float
+	y: float
+	target: Enemy
+	damage: float
+	speed: float = 420.0
+
+	def update(self, dt):
+		if self.target.health <= 0:
+			return True
+		dx = self.target.x - self.x
+		dy = self.target.y - self.y
+		dist = math.hypot(dx, dy)
+		if dist < 8:
+			self.target.health -= self.damage
+			return True
+		step = self.speed * dt
+		self.x += dx / dist * min(step, dist)
+		self.y += dy / dist * min(step, dist)
+		return False
+
+	def draw(self):
+		pygame.draw.circle(screen, BULLET_COLOR, (int(self.x), int(self.y)), 4)
 def tile_center(col, row):
 	return (col * TILE_SIZE + TILE_SIZE / 2, row * TILE_SIZE + TILE_SIZE / 2)
 
@@ -178,6 +173,13 @@ def update_towers(towers, enemies, bullets, dt):
 
 def draw_panel():
 	pygame.draw.rect(screen, PANEL_BG, (BOARD_WIDTH, 0, PANEL_WIDTH, HEIGHT))
+
+def tower_range(tower):
+	return 120
+def tower_damage(tower):
+	return 18
+def tower_fire_rate(tower):
+	return 1.0
 
 def tower_at(towers, col, row):
 	for t in towers:
@@ -229,6 +231,16 @@ def main():
 			tower.draw()
 		draw_panel()
 		update_towers(towers, enemies, bullets, dt)
+
+		for b in list(bullets):
+			if b.update(dt):
+				bullets.remove(b)
+		for b in bullets:
+			b.draw()
+
+		for enemy in list(enemies):
+			if enemy.health <= 0:
+				enemies.remove(enemy)
 		
 		pygame.display.flip()
 
