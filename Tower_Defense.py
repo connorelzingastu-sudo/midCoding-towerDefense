@@ -47,6 +47,7 @@ class WaveController:
 		self.spawned = 0
 		self.total = 0
 		self.spawn_timer = 0.0
+		self.auto_mode = False
 
 	def begin_wave(self):
 		if self.active:
@@ -54,7 +55,9 @@ class WaveController:
 		self.active = True
 		self.wave_index += 1
 		self.spawned = 0
-		self.total = 6 + self.wave_index * 2
+		self.total = 6 + self.wave_index * 3
+		self.enemy_health = 30 + self.wave_index * 8
+		self.enemy_speed = 80 + self.wave_index * 4		
 		self.spawn_timer = 0.2
 		return True
 
@@ -63,7 +66,9 @@ class WaveController:
 			return
 		self.spawn_timer -= dt
 		if self.spawn_timer <= 0 and self.spawned < self.total:
-			enemies.append(Enemy(*PATH_POINTS[0]))
+			enemies.append(
+				Enemy(*PATH_POINTS[0], speed=self.enemy_speed, health=self.enemy_health, max_health=self.enemy_health)
+			)
 			self.spawned += 1
 			self.spawn_timer = 0.8
 
@@ -233,6 +238,8 @@ def main():
 			elif event.type == pygame.KEYDOWN:
 				if event.key == pygame.K_s:
 					waves.begin_wave()
+				elif event.key == pygame.K_a:
+					waves.auto_mode = not waves.auto_mode
 			elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
 				mx, my = event.pos
 				if mx < BOARD_WIDTH:
@@ -243,7 +250,7 @@ def main():
 						gold -= tower_cost
 					elif gold < tower_cost:
 						message = "Not enough gold."
-
+		
 		waves.update(dt, enemies)
 		
 		for enemy in enemies:
@@ -256,7 +263,7 @@ def main():
 		draw_panel()
 		draw_hud(gold, lives, waves.wave_index, message)
 		update_towers(towers, enemies, bullets, dt)
-
+		
 		for b in list(bullets):
 			if b.update(dt):
 				bullets.remove(b)
@@ -272,7 +279,8 @@ def main():
 			elif enemy.health <= 0:
 				enemies.remove(enemy)
 				gold += 12
-		
+		if waves.auto_mode and not waves.active and len(enemies) == 0:
+			waves.begin_wave()
 		pygame.display.flip()
 
 	pygame.quit()
