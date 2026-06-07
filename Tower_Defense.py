@@ -71,6 +71,8 @@ class WaveController:
 			)
 			self.spawned += 1
 			self.spawn_timer = 0.8
+		elif self.spawned >= self.total:
+			self.active = False
 
 @dataclass
 class Tower:
