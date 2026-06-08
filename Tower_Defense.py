@@ -79,6 +79,7 @@ class Tower:
 	col: int
 	row: int
 	cooldown: float = 0.0
+	level: int = 1
 	@property
 	def x(self):
 		return self.col * TILE_SIZE + TILE_SIZE / 2
@@ -92,6 +93,8 @@ class Tower:
 		cy = int(self.y)
 		pygame.draw.rect(screen, TOWER_COLOR, (cx - 14, cy - 14, 28, 28), border_radius=4)
 
+
+	
 @dataclass
 class Enemy:
 	x: float
@@ -156,7 +159,12 @@ def tile_center(col, row):
 
 
 PATH_POINTS = [tile_center(c, r) for c, r in PATH_TILES]
-
+def tower_range(tower):
+	return 120 + (tower.level - 1) * 28
+def tower_damage(tower):
+	return 18 + (tower.level - 1) * 12
+def tower_fire_rate(tower):
+	return 1.0 + (tower.level - 1) * 0.35
 def draw_grid():
 	for row in range(GRID_ROWS):
 		for col in range(GRID_COLS):
@@ -230,7 +238,8 @@ def main():
 	lives = 20
 	tower_cost = 70
 	message = "Press S to start wave."
-
+	selected_tower = None
+	upgrade_cost = 90
 	while running:
 		screen.fill(BG_COLOR)
 		dt = clock.tick(FPS) / 1000.0
@@ -242,12 +251,20 @@ def main():
 					waves.begin_wave()
 				elif event.key == pygame.K_a:
 					waves.auto_mode = not waves.auto_mode
+				elif event.key == pygame.K_u and selected_tower is not None:
+					if gold >= upgrade_cost and selected_tower.level < 4:
+						selected_tower.level += 1
+						gold -= upgrade_cost
+						message = f"Tower upgraded to L{selected_tower.level}."
 			elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
 				mx, my = event.pos
 				if mx < BOARD_WIDTH:
 					col = mx // TILE_SIZE
 					row = my // TILE_SIZE
-					if can_place_tower(towers, col, row) and gold >= tower_cost:
+					clicked = tower_at(towers, col, row)
+					if clicked is not None:
+						selected_tower = clicked
+					elif can_place_tower(towers, col, row) and gold >= tower_cost:
 						towers.append(Tower(col, row))
 						gold -= tower_cost
 					elif gold < tower_cost:
@@ -262,6 +279,8 @@ def main():
 			enemy.draw()
 		for tower in towers:
 			tower.draw()
+			if tower is selected_tower:
+				pygame.draw.circle(screen, (255, 215, 117), (int(tower.x), int(tower.y)), int(tower_range(tower)), 2)
 		draw_panel()
 		draw_hud(gold, lives, waves.wave_index, message)
 		update_towers(towers, enemies, bullets, dt)
