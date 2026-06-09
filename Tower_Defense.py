@@ -398,7 +398,7 @@ def main():
                     waves.auto_mode = not waves.auto_mode
                     message = f"Auto waves {'enabled' if waves.auto_mode else 'disabled'}."
                 if event.key == pygame.K_u and selected_tower is not None:
-                    if selected_tower.level >= 4:
+                    if selected_tower.level >= 10:
                         message = "Tower is already max level."
                     elif gold >= upgrade_cost:
                         selected_tower.level += 1
