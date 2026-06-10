@@ -8,6 +8,7 @@ pygame.init()
 pygame.mixer.init()
 
 BULLET_SOUND = pygame.mixer.Sound("pew.mp3")
+BOOM_SOUND = pygame.mixer.Sound("boom.mp3")
 
 GRID_COLS = 16
 GRID_ROWS = 12
@@ -444,6 +445,7 @@ def main():
                         lives -= 1
                         message = "Enemy leaked through!"
                 elif enemy.health <= 0:
+                    BOOM_SOUND.play()
                     enemies.remove(enemy)
                     gold += 120 if enemy.is_boss else 12
 
