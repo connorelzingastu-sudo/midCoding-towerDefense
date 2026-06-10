@@ -69,6 +69,10 @@ def tile_center(col, row):
 
 PATH_POINTS = [tile_center(c, r) for c, r in PATH_TILES]
 
+# Load an image as a pygame surface and scale it to width, height
+def load_sprite_surface(file_name, width, height):
+    fullres = pygame.image.load(file_name).convert_alpha()
+    return pygame.transform.smoothscale(fullres, (width, height))
 
 @dataclass
 class Enemy:
@@ -112,12 +116,13 @@ class Enemy:
         pygame.draw.rect(screen, (77, 201, 112), (bar_x, bar_y, int(bar_w * pct), 6))
 
 
-@dataclass
 class Tower:
-    col: int
-    row: int
-    level: int = 1
-    cooldown: float = 0.0
+    def __init__(self, col, row, level = 1.0, cooldown = 0.0):
+        self.col = col
+        self.row = row
+        self.level = level
+        self.cooldown = cooldown
+        self.image = load_sprite_surface("tower.png", TILE_SIZE, TILE_SIZE)
 
     @property
     def x(self):
@@ -131,31 +136,32 @@ class Tower:
         cx = int(self.x)
         cy = int(self.y)
         size = 24 + (self.level - 1) * 2
-        pygame.draw.rect(
-            screen,
-            TOWER_COLOR,
-            (cx - size // 2, cy - size // 2, size, size),
-            border_radius=4,
-        )
+        scaled_image = pygame.transform.scale(self.image, (size, size))
+        screen.blit(scaled_image, (cx - size // 2, cy - size // 2, size, size))
         if self.level > 1:
             level_text = small_font.render(str(self.level), True, (10, 17, 25))
             screen.blit(level_text, (cx - 4, cy - 8))
 
-
-@dataclass
 class Bullet:
-    x: float
-    y: float
-    target: Enemy
-    damage: float
-    speed: float = 420.0
+    def __init__(self, x, y, target, damage):
+        self.width = 20
+        self.height = 20
+        self.image = load_sprite_surface("bullet.png", self.width, self.height)
+        self.rect = self.image.get_rect()
+        self.rect.x = x - self.width/2
+        self.rect.y = y - self.height/2
+        self.target = target
+        self.damage = damage
+        self.speed = 420.0
+        self.angle = 0.0
 
     def update(self, dt):
         if self.target.health <= 0 or self.target.path_index >= len(PATH_POINTS) - 1:
             return True
 
-        dx = self.target.x - self.x
-        dy = self.target.y - self.y
+        dx = self.target.x - self.rect.x - self.width/2
+        dy = self.target.y - self.rect.y - self.height/2
+        self.angle = 180 - math.degrees(math.atan2(dy,dx))
         dist = math.hypot(dx, dy)
         if dist < 8:
             self.target.health -= self.damage
@@ -163,12 +169,14 @@ class Bullet:
 
         step = min(self.speed * dt, dist)
         if dist > 1e-6:
-            self.x += dx / dist * step
-            self.y += dy / dist * step
+            self.rect.x += dx / dist * step
+            self.rect.y += dy / dist * step
         return False
 
     def draw(self):
-        pygame.draw.circle(screen, BULLET_COLOR, (int(self.x), int(self.y)), 4)
+        rotated_image = pygame.transform.rotate(self.image, self.angle)
+        rotated_rect = rotated_image.get_rect(center=self.rect.center)
+        screen.blit(rotated_image, rotated_rect.topleft)
 
 
 class WaveController:
@@ -235,7 +243,6 @@ class WaveController:
 
         if self.spawned >= self.total and (not self.boss_pending or self.boss_spawned) and len(enemies) == 0:
             self.active = False
-
 
 def tower_at(towers, col, row):
     for tower in towers:
