@@ -5,6 +5,9 @@ from dataclasses import dataclass
 import pygame
 
 pygame.init()
+pygame.mixer.init()
+
+BULLET_SOUND = pygame.mixer.Sound("pew.mp3")
 
 GRID_COLS = 16
 GRID_ROWS = 12
@@ -278,6 +281,7 @@ def update_towers(towers, enemies, bullets, dt):
                 break
 
         if target is not None:
+            BULLET_SOUND.play()
             bullets.append(Bullet(tower.x, tower.y, target, tower_damage(tower)))
             tower.cooldown = 1.0 / tower_fire_rate(tower)
 
