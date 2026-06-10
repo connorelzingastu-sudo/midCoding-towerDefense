@@ -124,10 +124,10 @@ class Enemy:
 
 
 class Tower:
-    def __init__(self, col, row, level = 1.0, cooldown = 0.0):
+    def __init__(self, col, row, level = 1, cooldown = 0.0):
         self.col = col
         self.row = row
-        self.level = level
+        self.level: int = level
         self.cooldown = cooldown
         self.image = load_sprite_surface("tower.png", TILE_SIZE, TILE_SIZE)
 
