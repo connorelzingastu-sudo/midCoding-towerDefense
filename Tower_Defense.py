@@ -74,15 +74,19 @@ def load_sprite_surface(file_name, width, height):
     fullres = pygame.image.load(file_name).convert_alpha()
     return pygame.transform.smoothscale(fullres, (width, height))
 
-@dataclass
 class Enemy:
-    x: float
-    y: float
-    speed: float = 90.0
-    path_index: int = 0
-    health: float = 40.0
-    max_health: float = 40.0
-    is_boss: bool = False
+    def __init__(self, x, y, speed = 90.0, health = 40.0, max_health = 40.0, is_boss = False):
+        self.x = x
+        self.y = y
+        self.speed = speed
+        self.path_index: int = 0
+        self.health = health
+        self.max_health = max_health
+        self.is_boss = is_boss
+        self.boss_size = 44
+        self.boss_image = load_sprite_surface("bloon.png", self.boss_size, self.boss_size)
+        self.size = 28
+        self.image = load_sprite_surface("bloon.png", self.size, self.size)
 
     def update(self, dt):
         if self.path_index >= len(PATH_POINTS) - 1:
@@ -105,10 +109,13 @@ class Enemy:
             self.y += dy / dist * step
 
     def draw(self):
-        radius = 22 if self.is_boss else 14
-        color = (180, 70, 48) if self.is_boss else ENEMY_COLOR
-        pygame.draw.circle(screen, color, (int(self.x), int(self.y)), radius)
-        bar_w = 44 if self.is_boss else 28
+        size = self.size
+        if self.is_boss:
+            size = self.boss_size
+            screen.blit(self.boss_image, (self.x - size/2, self.y - size/2, size, size))
+        else:
+            screen.blit(self.image, (self.x - size/2, self.y - size/2, self.size, self.size))
+        bar_w = size
         pct = 0.0 if self.max_health <= 0 else max(0.0, self.health / self.max_health)
         bar_x = int(self.x - bar_w / 2)
         bar_y = int(self.y - (32 if self.is_boss else 22))
